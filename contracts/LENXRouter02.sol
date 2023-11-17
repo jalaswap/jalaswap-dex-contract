@@ -9,7 +9,6 @@ import "./interfaces/IERC20.sol";
 
 import "./interfaces/ILENXRouter02.sol";
 import "./interfaces/IWCHZ.sol";
-import {console} from "forge-std/console.sol";
 
 contract LENXRouter02 is ILENXRouter02 {
     address public immutable override factory;
@@ -24,13 +23,19 @@ contract LENXRouter02 is ILENXRouter02 {
         factory = _factory;
         WCHZ = _WCHZ;
 
-        // approve LENX to factory for createFee
-        address feeToken = ILENXFactory(factory).lenx();
-        TransferHelper.safeApprove(feeToken, factory, type(uint).max);
+        _approveFeeTokenToFactory();
     }
 
     receive() external payable {
         assert(msg.sender == WCHZ); // only accept CHZ via fallback from the WCHZ contract
+    }
+
+    function _approveFeeTokenToFactory() internal {
+        // approve feeToken to factory for createFee
+        address feeToken = ILENXFactory(factory).feeToken();
+        if (feeToken != address(0)) {
+            TransferHelper.safeApprove(feeToken, factory, type(uint).max);
+        }
     }
 
     // **** ADD LIQUIDITY ****
@@ -45,8 +50,8 @@ contract LENXRouter02 is ILENXRouter02 {
         // create the pair if it doesn't exist yet
         if (ILENXFactory(factory).getPair(tokenA, tokenB) == address(0)) {
             uint createFee = ILENXFactory(factory).createFee();
-            if (createFee > 0) {
-                address feeToken = ILENXFactory(factory).lenx();
+            if (createFee != 0) {
+                address feeToken = ILENXFactory(factory).feeToken();
                 TransferHelper.safeTransferFrom(feeToken, msg.sender, address(this), createFee);
             }
             ILENXFactory(factory).createPair(tokenA, tokenB);
@@ -475,5 +480,9 @@ contract LENXRouter02 is ILENXRouter02 {
 
     function getPairInAdvance(address tokenA, address tokenB) public view virtual override returns (address) {
         return LENXLibrary.pairFor(factory, tokenA, tokenB);
+    }
+
+    function approveFeeTokenToFactory() public {
+        _approveFeeTokenToFactory();
     }
 }

@@ -55,7 +55,35 @@ contract LENXRouter02_Test is Test {
         );
 
         address pairAddress = factory.getPair(address(tokenA), address(tokenB));
-        assertEq(pairAddress, 0xbDB8083deBF23F108CCA813BFA57fB192Ecd8E63);
+        assertEq(pairAddress, 0x8E9E3091895c331c087D73E79ce0578919d85F3b);
+    }
+
+    function test_AddLiquidityCreatesPairAndPaysFee() public {
+        vm.startPrank(feeSetter);
+        factory.setFeeToken(address(tokenC));
+        factory.setFeeTo(address(1));
+        factory.setCreateFee(2 ether);
+        vm.stopPrank();
+
+        tokenC.mint(2 ether, address(this));
+        tokenC.approve(address(router), 2 ether);
+        router.approveFeeTokenToFactory();
+
+        tokenA.approve(address(router), 1 ether);
+        tokenB.approve(address(router), 1 ether);
+
+        router.addLiquidity(
+            address(tokenA),
+            address(tokenB),
+            1 ether,
+            1 ether,
+            1 ether,
+            1 ether,
+            address(this),
+            block.timestamp
+        );
+
+        assertEq(tokenC.balanceOf(address(1)), 2 ether);
     }
 
     function test_AddLiquidityNoPair() public {

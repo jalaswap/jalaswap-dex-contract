@@ -91,7 +91,7 @@ contract LENXLibrary_Test is Test {
     function test_PairForNonexistentFactory() public {
         address pairAddress = LENXLibrary.pairFor(address(0xaabbcc), address(tokenB), address(tokenA));
 
-        assertEq(pairAddress, 0x85839263333299E49eEA3e19A999aF4Ea7f1b06f);
+        assertEq(pairAddress, 0x2c1747eDe041CE14BAa62813049EEEb98194B295);
     }
 
     function test_GetAmountOut() public {

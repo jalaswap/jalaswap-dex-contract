@@ -14,7 +14,7 @@ contract LENXFactory is ILENXFactory {
     bool public override flashOn;
     uint public override createFee;
     uint public override flashFee;
-    address public override lenx;
+    address public override feeToken;
     address public override feeTo;
     address public override feeToSetter;
     mapping(address => bool) public override migrators;
@@ -24,16 +24,18 @@ contract LENXFactory is ILENXFactory {
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
     event SetFeeTo(address indexed feeTo);
+    event SetFeeToken(address indexed feeToken);
     event SetFeeToSetter(address indexed oldFeeToSetter, address indexed newFeeToSetter);
     event SetMigrator(address indexed migrator, bool state);
     event SetFlashOn(bool state);
     event SetFlashFee(uint fee);
     event SetCreateFee(uint createFee);
 
-    constructor(address _feeToSetter, address _lenx) {
+    constructor(address _feeToSetter, address _feeToken) {
         feeToSetter = _feeToSetter;
-        lenx = _lenx;
+        feeToken = _feeToken;
         flashOn = false;
+        feeTo = DEAD;
     }
 
     modifier onlyFeeToSetter() {
@@ -63,9 +65,16 @@ contract LENXFactory is ILENXFactory {
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
-        IERC20(lenx).safeTransferFrom(msg.sender, DEAD, createFee);
+        if (createFee != 0) {
+            IERC20(feeToken).safeTransferFrom(msg.sender, feeTo, createFee);
+        }
 
         emit PairCreated(token0, token1, pair, allPairs.length);
+    }
+
+    function setFeeToken(address _feeToken) external onlyFeeToSetter {
+        feeToken = _feeToken;
+        emit SetFeeToken(feeToken);
     }
 
     function setFeeTo(address _feeTo) external onlyFeeToSetter {

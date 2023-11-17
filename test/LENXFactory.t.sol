@@ -10,7 +10,6 @@ import "./mocks/ERC20Mintable.sol";
 contract LENXFactory_Test is Test {
     address feeSetter = address(69);
     LENXFactory factory;
-    LENXERC20 lenx;
 
     ERC20Mintable token0;
     ERC20Mintable token1;
@@ -18,8 +17,7 @@ contract LENXFactory_Test is Test {
     ERC20Mintable token3;
 
     function setUp() public {
-        lenx = new LENXERC20();
-        factory = new LENXFactory(feeSetter, address(lenx));
+        factory = new LENXFactory(feeSetter, address(0));
 
         token0 = new ERC20Mintable("Token A", "TKNA");
         token1 = new ERC20Mintable("Token B", "TKNB");
@@ -58,5 +56,19 @@ contract LENXFactory_Test is Test {
     function test_CreatePairIdenticalTokens() public {
         vm.expectRevert("LENX: IDENTICAL_ADDRESSES");
         factory.createPair(address(token0), address(token0));
+    }
+
+    function test_CreatePairPayFee() public {
+        vm.startPrank(feeSetter);
+        factory.setFeeToken(address(token2));
+        factory.setFeeTo(address(1));
+        factory.setCreateFee(1 ether);
+        vm.stopPrank();
+
+        token2.mint(1 ether, address(this));
+        token2.approve(address(factory), 1 ether);
+        factory.createPair(address(token1), address(token0));
+
+        assertEq(token2.balanceOf(address(1)), 1 ether);
     }
 }

@@ -9,7 +9,7 @@ interface ILENXFactory {
 
     function createFee() external view returns (uint);
 
-    function lenx() external view returns (address);
+    function feeToken() external view returns (address);
 
     function feeTo() external view returns (address);
 
