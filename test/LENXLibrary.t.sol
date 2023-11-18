@@ -26,8 +26,7 @@ contract LENXLibrary_Test is Test {
     }
 
     function setUp() public {
-        lenx = new LENXERC20();
-        factory = new LENXFactory(feeSetter, address(lenx));
+        factory = new LENXFactory(feeSetter);
 
         tokenA = new ERC20Mintable("TokenA", "TKNA");
         tokenB = new ERC20Mintable("TokenB", "TKNB");
@@ -91,7 +90,7 @@ contract LENXLibrary_Test is Test {
     function test_PairForNonexistentFactory() public {
         address pairAddress = LENXLibrary.pairFor(address(0xaabbcc), address(tokenB), address(tokenA));
 
-        assertEq(pairAddress, 0xEBF353Af7010B9d3dc870cF0f84be26a4eAf9CD3);
+        assertEq(pairAddress, 0x83076b5Ae88DE7e1B187956bB69adEE497fFD77F);
     }
 
     function test_GetAmountOut() public {

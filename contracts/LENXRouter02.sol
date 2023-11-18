@@ -21,8 +21,6 @@ contract LENXRouter02 is ILENXRouter02 {
     constructor(address _factory, address _WCHZ) {
         factory = _factory;
         WCHZ = _WCHZ;
-
-        TransferHelper.safeApprove(ILENXFactory(factory).feeToken(), factory, type(uint).max);
     }
 
     receive() external payable {
@@ -40,11 +38,6 @@ contract LENXRouter02 is ILENXRouter02 {
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
         if (ILENXFactory(factory).getPair(tokenA, tokenB) == address(0)) {
-            uint createFee = ILENXFactory(factory).createFee();
-            if (createFee > 0) {
-                address feeToken = ILENXFactory(factory).feeToken();
-                TransferHelper.safeTransferFrom(feeToken, msg.sender, address(this), createFee);
-            }
             ILENXFactory(factory).createPair(tokenA, tokenB);
         }
         (uint256 reserveA, uint256 reserveB) = LENXLibrary.getReserves(factory, tokenA, tokenB);
@@ -467,9 +460,5 @@ contract LENXRouter02 is ILENXRouter02 {
 
     function getPairInAdvance(address tokenA, address tokenB) public view virtual override returns (address) {
         return LENXLibrary.pairFor(factory, tokenA, tokenB);
-    }
-
-    function approveFeeTokenToFactory() public {
-        TransferHelper.safeApprove(ILENXFactory(factory).feeToken(), factory, type(uint).max);
     }
 }

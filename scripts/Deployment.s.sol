@@ -33,7 +33,7 @@ contract Deployment is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        LENXFactory factory = new LENXFactory(feeToSetter, address(0));
+        LENXFactory factory = new LENXFactory(feeToSetter);
         LENXRouter02 router = new LENXRouter02(address(factory), WCHZ);
 
         console.log("FACTORY: ", address(factory));

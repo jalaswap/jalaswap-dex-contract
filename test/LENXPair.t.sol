@@ -24,8 +24,7 @@ contract LENXPair_Test is Test {
         token0 = new ERC20Mintable("Token A", "TKNA");
         token1 = new ERC20Mintable("Token B", "TKNB");
 
-        lenx = new LENXERC20();
-        factory = new LENXFactory(feeSetter, address(lenx));
+        factory = new LENXFactory(feeSetter);
         address pairAddress = factory.createPair(address(token0), address(token1));
         pair = LENXPair(pairAddress);
 
@@ -220,7 +219,7 @@ contract LENXPair_Test is Test {
         token1.transfer(address(pair), 2 ether);
         pair.mint(address(this));
 
-        bytes32 val = vm.load(address(pair), bytes32(uint256(7)));
+        bytes32 val = vm.load(address(pair), bytes32(uint256(6)));
         assertEq(val, hex"000000000000000000001bc16d674ec800000000000000000de0b6b3a7640000");
     }
 

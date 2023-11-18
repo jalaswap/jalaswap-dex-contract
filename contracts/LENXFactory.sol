@@ -12,9 +12,7 @@ contract LENXFactory is ILENXFactory {
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
 
     bool public override flashOn;
-    uint public override createFee;
     uint public override flashFee;
-    address public override feeToken;
     address public override feeTo;
     address public override feeToSetter;
     mapping(address => bool) public override migrators;
@@ -22,9 +20,8 @@ contract LENXFactory is ILENXFactory {
     mapping(address => mapping(address => address)) public override getPair;
     address[] public override allPairs;
 
-    constructor(address _feeToSetter, address _feeToken) {
+    constructor(address _feeToSetter) {
         feeToSetter = _feeToSetter;
-        feeToken = _feeToken;
         flashOn = false;
         feeTo = DEAD;
     }
@@ -56,16 +53,8 @@ contract LENXFactory is ILENXFactory {
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
-        if (createFee != 0) {
-            IERC20(feeToken).safeTransferFrom(msg.sender, feeTo, createFee);
-        }
 
         emit PairCreated(token0, token1, pair, allPairs.length);
-    }
-
-    function setFeeToken(address _feeToken) external onlyFeeToSetter {
-        feeToken = _feeToken;
-        emit SetFeeToken(feeToken);
     }
 
     function setFeeTo(address _feeTo) external onlyFeeToSetter {
@@ -92,10 +81,5 @@ contract LENXFactory is ILENXFactory {
     function setFlashFee(uint _flashFee) external onlyFeeToSetter {
         flashFee = _flashFee;
         emit SetFlashFee(_flashFee);
-    }
-
-    function setCreateFee(uint _createFee) external onlyFeeToSetter {
-        createFee = _createFee;
-        emit SetCreateFee(_createFee);
     }
 }

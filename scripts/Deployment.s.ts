@@ -8,7 +8,7 @@ async function main() {
 
   // Deploy LENXFactory with the address of the LENX token
   const lenxFactoryFactory = await ethers.getContractFactory("LENXFactory");
-  const lenxFactory = await lenxFactoryFactory.deploy(deployer.address, "0x0000000000000000000000000000000000000000");
+  const lenxFactory = await lenxFactoryFactory.deploy(deployer.address);
   await lenxFactory.deployed();
   console.log(`LENX Factory deployed to: ${lenxFactory.address}`);
 

@@ -10,7 +10,6 @@ import "./mocks/ERC20Mintable.sol";
 
 contract LENXRouter02_Test is Test {
     address feeSetter = address(69);
-    LENXERC20 lenx;
     ERC20Mintable WCHZ;
 
     LENXRouter02 router;
@@ -21,10 +20,9 @@ contract LENXRouter02_Test is Test {
     ERC20Mintable tokenC;
 
     function setUp() public {
-        lenx = new LENXERC20();
         WCHZ = new ERC20Mintable("Wrapped CHZ", "WCHZ");
 
-        factory = new LENXFactory(feeSetter, address(lenx));
+        factory = new LENXFactory(feeSetter);
         router = new LENXRouter02(address(factory), address(WCHZ));
 
         tokenA = new ERC20Mintable("Token A", "TKNA");
@@ -56,35 +54,7 @@ contract LENXRouter02_Test is Test {
         );
 
         address pairAddress = factory.getPair(address(tokenA), address(tokenB));
-        assertEq(pairAddress, 0x1De9E2C75588a52351DeC23AFCF0c0943747A4E0);
-    }
-
-    function test_AddLiquidityCreatesPairAndPaysFee() public {
-        vm.startPrank(feeSetter);
-        factory.setFeeToken(address(tokenC));
-        factory.setFeeTo(address(1));
-        factory.setCreateFee(2 ether);
-        vm.stopPrank();
-
-        tokenC.mint(2 ether, address(this));
-        tokenC.approve(address(router), 2 ether);
-        router.approveFeeTokenToFactory();
-
-        tokenA.approve(address(router), 1 ether);
-        tokenB.approve(address(router), 1 ether);
-
-        router.addLiquidity(
-            address(tokenA),
-            address(tokenB),
-            1 ether,
-            1 ether,
-            1 ether,
-            1 ether,
-            address(this),
-            block.timestamp
-        );
-
-        assertEq(tokenC.balanceOf(address(1)), 2 ether);
+        assertEq(pairAddress, 0x409f05fa9ff5Bf929a4Bc2bf6a8836619Fe4BC70);
     }
 
     function test_AddLiquidityNoPair() public {

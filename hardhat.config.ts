@@ -1,6 +1,7 @@
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-etherscan";
 import "dotenv/config";
+import "hardhat-contract-sizer";
 
 export default {
   solidity: {

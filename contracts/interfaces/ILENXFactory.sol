@@ -10,20 +10,14 @@ interface ILENXFactory {
 
     event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
     event SetFeeTo(address indexed feeTo);
-    event SetFeeToken(address indexed feeToken);
     event SetFeeToSetter(address indexed oldFeeToSetter, address indexed newFeeToSetter);
     event SetMigrator(address indexed migrator, bool state);
     event SetFlashOn(bool state);
     event SetFlashFee(uint fee);
-    event SetCreateFee(uint createFee);
 
     function flashOn() external view returns (bool);
 
     function flashFee() external view returns (uint);
-
-    function createFee() external view returns (uint);
-
-    function feeToken() external view returns (address);
 
     function feeTo() external view returns (address);
 

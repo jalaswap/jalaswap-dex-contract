@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 contract LENXERC20 {
     string public constant name = "LENX LP";
+    string public constant symbol = "LENX-LP";
     uint8 public constant decimals = 18;
 
-    string public symbol; // "LENX + ' ' + TokenA.symbol() + '-' + TokenB.symbol()"
     uint256 public totalSupply;
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
