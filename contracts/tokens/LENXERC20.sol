@@ -11,6 +11,8 @@ contract LENXERC20 {
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
 
+    error InvalidAllowance();
+
     event Approval(address indexed owner, address indexed spender, uint256 value);
     event Transfer(address indexed from, address indexed to, uint256 value);
 
@@ -70,7 +72,7 @@ contract LENXERC20 {
 
     function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
         uint256 currentAllowance = allowance[msg.sender][spender];
-        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        if (currentAllowance < subtractedValue) revert InvalidAllowance();
         unchecked {
             _approve(msg.sender, spender, currentAllowance - subtractedValue);
         }

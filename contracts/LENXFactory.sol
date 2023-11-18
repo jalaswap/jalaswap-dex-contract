@@ -22,15 +22,6 @@ contract LENXFactory is ILENXFactory {
     mapping(address => mapping(address => address)) public override getPair;
     address[] public override allPairs;
 
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint256);
-    event SetFeeTo(address indexed feeTo);
-    event SetFeeToken(address indexed feeToken);
-    event SetFeeToSetter(address indexed oldFeeToSetter, address indexed newFeeToSetter);
-    event SetMigrator(address indexed migrator, bool state);
-    event SetFlashOn(bool state);
-    event SetFlashFee(uint fee);
-    event SetCreateFee(uint createFee);
-
     constructor(address _feeToSetter, address _feeToken) {
         feeToSetter = _feeToSetter;
         feeToken = _feeToken;
@@ -39,7 +30,7 @@ contract LENXFactory is ILENXFactory {
     }
 
     modifier onlyFeeToSetter() {
-        require(msg.sender == feeToSetter, "LENX: Only FeeToSetter");
+        if (msg.sender != feeToSetter) revert OnlyFeeSetter();
         _;
     }
 
@@ -52,10 +43,10 @@ contract LENXFactory is ILENXFactory {
     }
 
     function createPair(address tokenA, address tokenB) external override returns (address pair) {
-        require(tokenA != tokenB, "LENX: IDENTICAL_ADDRESSES");
+        if (tokenA == tokenB) revert IdenticalAddresses();
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), "LENX: ZERO_ADDRESS");
-        require(getPair[token0][token1] == address(0), "LENX: PAIR_EXISTS"); // single check is sufficient
+        if (token0 == address(0)) revert ZeroAddress();
+        if (getPair[token0][token1] != address(0)) revert PairExists();
         bytes memory bytecode = type(LENXPair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {

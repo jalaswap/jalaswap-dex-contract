@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 import "../interfaces/IERC20.sol";
 
 library SafeERC20 {
+    error ApproveFailed();
+    error TransferFailed();
+    error TransferFromFailed();
+
     function safeApprove(
         IERC20 token,
         address to,
@@ -11,7 +15,7 @@ library SafeERC20 {
     ) internal {
         // bytes4(keccak256(bytes('approve(address,uint256)')));
         (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0x095ea7b3, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: APPROVE_FAILED");
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revert ApproveFailed();
     }
 
     function safeTransfer(
@@ -21,7 +25,7 @@ library SafeERC20 {
     ) internal {
         // bytes4(keccak256(bytes('transfer(address,uint256)')));
         (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0xa9059cbb, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: TRANSFER_FAILED");
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revert TransferFailed();
     }
 
     function safeTransferFrom(
@@ -32,11 +36,11 @@ library SafeERC20 {
     ) internal {
         // bytes4(keccak256(bytes('transferFrom(address,address,uint256)')));
         (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(0x23b872dd, from, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: TRANSFER_FROM_FAILED");
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revert TransferFromFailed();
     }
 
     function safeTransferCHZ(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, "SafeERC20: CHZ_TRANSFER_FAILED");
+        if (!success) revert TransferFailed();
     }
 }

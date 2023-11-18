@@ -91,7 +91,7 @@ contract LENXLibrary_Test is Test {
     function test_PairForNonexistentFactory() public {
         address pairAddress = LENXLibrary.pairFor(address(0xaabbcc), address(tokenB), address(tokenA));
 
-        assertEq(pairAddress, 0x2c1747eDe041CE14BAa62813049EEEb98194B295);
+        assertEq(pairAddress, 0xEBF353Af7010B9d3dc870cF0f84be26a4eAf9CD3);
     }
 
     function test_GetAmountOut() public {
@@ -100,17 +100,17 @@ contract LENXLibrary_Test is Test {
     }
 
     function test_GetAmountOutZeroInputAmount() public {
-        vm.expectRevert("LENXLibrary: INSUFFICIENT_INPUT_AMOUNT");
+        vm.expectRevert(LENXLibrary.InsufficientInputAmount.selector);
         LENXLibrary.getAmountOut(0, 1 ether, 1.5 ether);
     }
 
     function test_GetAmountOutZeroInputReserve() public {
-        vm.expectRevert("LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        vm.expectRevert(LENXLibrary.InsufficientLiquidity.selector);
         LENXLibrary.getAmountOut(1000, 0, 1.5 ether);
     }
 
     function test_GetAmountOutZeroOutputReserve() public {
-        vm.expectRevert("LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        vm.expectRevert(LENXLibrary.InsufficientLiquidity.selector);
         LENXLibrary.getAmountOut(1000, 1 ether, 0);
     }
 
@@ -146,7 +146,7 @@ contract LENXLibrary_Test is Test {
         address[] memory path = new address[](1);
         path[0] = address(tokenA);
 
-        vm.expectRevert("LENXLibrary: INVALID_PATH");
+        vm.expectRevert(LENXLibrary.InvalidPath.selector);
         LENXLibrary.getAmountsOut(address(factory), 0.1 ether, path);
     }
 
@@ -156,17 +156,17 @@ contract LENXLibrary_Test is Test {
     }
 
     function test_GetAmountInZeroInputAmount() public {
-        vm.expectRevert("LENXLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
+        vm.expectRevert(LENXLibrary.InsufficientOutputAmount.selector);
         LENXLibrary.getAmountIn(0, 1 ether, 1.5 ether);
     }
 
     function test_GetAmountInZeroInputReserve() public {
-        vm.expectRevert("LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        vm.expectRevert(LENXLibrary.InsufficientLiquidity.selector);
         LENXLibrary.getAmountIn(1000, 0, 1.5 ether);
     }
 
     function test_GetAmountInZeroOutputReserve() public {
-        vm.expectRevert("LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        vm.expectRevert(LENXLibrary.InsufficientLiquidity.selector);
         LENXLibrary.getAmountIn(1000, 1 ether, 0);
     }
 
@@ -202,7 +202,7 @@ contract LENXLibrary_Test is Test {
         address[] memory path = new address[](1);
         path[0] = address(tokenA);
 
-        vm.expectRevert("LENXLibrary: INVALID_PATH");
+        vm.expectRevert(LENXLibrary.InvalidPath.selector);
         LENXLibrary.getAmountsIn(address(factory), 0.1 ether, path);
     }
 }

@@ -6,7 +6,6 @@ import "./libraries/LENXLibrary.sol";
 import "./libraries/TransferHelper.sol";
 import "./interfaces/ILENXFactory.sol";
 import "./interfaces/IERC20.sol";
-
 import "./interfaces/ILENXRouter02.sol";
 import "./interfaces/IWCHZ.sol";
 
@@ -15,7 +14,7 @@ contract LENXRouter02 is ILENXRouter02 {
     address public immutable override WCHZ;
 
     modifier ensure(uint256 deadline) {
-        require(deadline >= block.timestamp, "LENXRouter: EXPIRED");
+        if (deadline < block.timestamp) revert Expired();
         _;
     }
 
@@ -23,19 +22,11 @@ contract LENXRouter02 is ILENXRouter02 {
         factory = _factory;
         WCHZ = _WCHZ;
 
-        _approveFeeTokenToFactory();
+        TransferHelper.safeApprove(ILENXFactory(factory).feeToken(), factory, type(uint).max);
     }
 
     receive() external payable {
         assert(msg.sender == WCHZ); // only accept CHZ via fallback from the WCHZ contract
-    }
-
-    function _approveFeeTokenToFactory() internal {
-        // approve feeToken to factory for createFee
-        address feeToken = ILENXFactory(factory).feeToken();
-        if (feeToken != address(0)) {
-            TransferHelper.safeApprove(feeToken, factory, type(uint).max);
-        }
     }
 
     // **** ADD LIQUIDITY ****
@@ -50,7 +41,7 @@ contract LENXRouter02 is ILENXRouter02 {
         // create the pair if it doesn't exist yet
         if (ILENXFactory(factory).getPair(tokenA, tokenB) == address(0)) {
             uint createFee = ILENXFactory(factory).createFee();
-            if (createFee != 0) {
+            if (createFee > 0) {
                 address feeToken = ILENXFactory(factory).feeToken();
                 TransferHelper.safeTransferFrom(feeToken, msg.sender, address(this), createFee);
             }
@@ -62,12 +53,12 @@ contract LENXRouter02 is ILENXRouter02 {
         } else {
             uint256 amountBOptimal = LENXLibrary.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, "LENXRouter: INSUFFICIENT_B_AMOUNT");
+                if (amountBOptimal < amountBMin) revert InsufficientBAmount();
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
                 uint256 amountAOptimal = LENXLibrary.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, "LENXRouter: INSUFFICIENT_A_AMOUNT");
+                if (amountAOptimal < amountAMin) revert InsufficientAAmount();
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -137,8 +128,8 @@ contract LENXRouter02 is ILENXRouter02 {
         (uint256 amount0, uint256 amount1) = ILENXPair(pair).burn(to);
         (address token0, ) = LENXLibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        require(amountA >= amountAMin, "LENXRouter: INSUFFICIENT_A_AMOUNT");
-        require(amountB >= amountBMin, "LENXRouter: INSUFFICIENT_B_AMOUNT");
+        if (amountA < amountAMin) revert InsufficientAAmount();
+        if (amountB < amountBMin) revert InsufficientBAmount();
     }
 
     function removeLiquidityCHZ(
@@ -263,7 +254,7 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = LENXLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "LENXRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -281,7 +272,7 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
         amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "LENXRouter: EXCESSIVE_INPUT_AMOUNT");
+        if (amounts[0] > amountInMax) revert ExcessiveInputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -297,9 +288,9 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WCHZ, "LENXRouter: INVALID_PATH");
+        if (path[0] != WCHZ) revert InvalidPath();
         amounts = LENXLibrary.getAmountsOut(factory, msg.value, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "LENXRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
         IWCHZ(WCHZ).deposit{value: amounts[0]}();
         assert(IWCHZ(WCHZ).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
@@ -312,9 +303,9 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WCHZ, "LENXRouter: INVALID_PATH");
+        if (path[path.length - 1] != WCHZ) revert InvalidPath();
         amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "LENXRouter: EXCESSIVE_INPUT_AMOUNT");
+        if (amounts[0] > amountInMax) revert ExcessiveInputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -333,9 +324,9 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[path.length - 1] == WCHZ, "LENXRouter: INVALID_PATH");
+        if (path[path.length - 1] != WCHZ) revert InvalidPath();
         amounts = LENXLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "LENXRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -353,9 +344,9 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        require(path[0] == WCHZ, "LENXRouter: INVALID_PATH");
+        if (path[0] != WCHZ) revert InvalidPath();
         amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= msg.value, "LENXRouter: EXCESSIVE_INPUT_AMOUNT");
+        if (amounts[0] > msg.value) revert ExcessiveInputAmount();
         IWCHZ(WCHZ).deposit{value: amounts[0]}();
         assert(IWCHZ(WCHZ).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
@@ -399,10 +390,8 @@ contract LENXRouter02 is ILENXRouter02 {
         TransferHelper.safeTransferFrom(path[0], msg.sender, LENXLibrary.pairFor(factory, path[0], path[1]), amountIn);
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
-        require(
-            IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
-            "LENXRouter: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
+        if (IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore < amountOutMin)
+            revert InsufficientOutputAmount();
     }
 
     function swapExactCHZForTokensSupportingFeeOnTransferTokens(
@@ -411,16 +400,14 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) {
-        require(path[0] == WCHZ, "LENXRouter: INVALID_PATH");
+        if (path[0] != WCHZ) revert InvalidPath();
         uint256 amountIn = msg.value;
         IWCHZ(WCHZ).deposit{value: amountIn}();
         assert(IWCHZ(WCHZ).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amountIn));
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
-        require(
-            IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore >= amountOutMin,
-            "LENXRouter: INSUFFICIENT_OUTPUT_AMOUNT"
-        );
+        if (IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore < amountOutMin)
+            revert InsufficientOutputAmount();
     }
 
     function swapExactTokensForCHZSupportingFeeOnTransferTokens(
@@ -430,11 +417,11 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) {
-        require(path[path.length - 1] == WCHZ, "LENXRouter: INVALID_PATH");
+        if (path[path.length - 1] != WCHZ) revert InvalidPath();
         TransferHelper.safeTransferFrom(path[0], msg.sender, LENXLibrary.pairFor(factory, path[0], path[1]), amountIn);
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint256 amountOut = IERC20(WCHZ).balanceOf(address(this));
-        require(amountOut >= amountOutMin, "LENXRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        if (amountOut < amountOutMin) revert InsufficientOutputAmount();
         IWCHZ(WCHZ).withdraw(amountOut);
         TransferHelper.safeTransferCHZ(to, amountOut);
     }
@@ -483,6 +470,6 @@ contract LENXRouter02 is ILENXRouter02 {
     }
 
     function approveFeeTokenToFactory() public {
-        _approveFeeTokenToFactory();
+        TransferHelper.safeApprove(ILENXFactory(factory).feeToken(), factory, type(uint).max);
     }
 }

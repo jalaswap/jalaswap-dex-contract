@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../contracts/LENXFactory.sol";
 import "../contracts/LENXPair.sol";
 import "../contracts/LENXRouter02.sol";
+import "../contracts/interfaces/ILENXRouter02.sol";
 import "./mocks/ERC20Mintable.sol";
 
 contract LENXRouter02_Test is Test {
@@ -55,7 +56,7 @@ contract LENXRouter02_Test is Test {
         );
 
         address pairAddress = factory.getPair(address(tokenA), address(tokenB));
-        assertEq(pairAddress, 0x8E9E3091895c331c087D73E79ce0578919d85F3b);
+        assertEq(pairAddress, 0x1De9E2C75588a52351DeC23AFCF0c0943747A4E0);
     }
 
     function test_AddLiquidityCreatesPairAndPaysFee() public {
@@ -166,7 +167,7 @@ contract LENXRouter02_Test is Test {
         tokenA.approve(address(router), 1 ether);
         tokenB.approve(address(router), 2 ether);
 
-        vm.expectRevert("LENXRouter: INSUFFICIENT_B_AMOUNT");
+        vm.expectRevert(ILENXRouter02.InsufficientBAmount.selector);
         router.addLiquidity(
             address(tokenA),
             address(tokenB),
@@ -193,7 +194,7 @@ contract LENXRouter02_Test is Test {
         tokenA.approve(address(router), 2 ether);
         tokenB.approve(address(router), 1 ether);
 
-        vm.expectRevert("LENXRouter: INSUFFICIENT_A_AMOUNT");
+        vm.expectRevert(ILENXRouter02.InsufficientAAmount.selector);
         router.addLiquidity(
             address(tokenA),
             address(tokenB),
@@ -337,7 +338,7 @@ contract LENXRouter02_Test is Test {
 
         pair.approve(address(router), liquidity);
 
-        vm.expectRevert("LENXRouter: INSUFFICIENT_A_AMOUNT");
+        vm.expectRevert(ILENXRouter02.InsufficientAAmount.selector);
         router.removeLiquidity(
             address(tokenA),
             address(tokenB),
@@ -370,7 +371,7 @@ contract LENXRouter02_Test is Test {
 
         pair.approve(address(router), liquidity);
 
-        vm.expectRevert("LENXRouter: INSUFFICIENT_B_AMOUNT");
+        vm.expectRevert(ILENXRouter02.InsufficientBAmount.selector);
         router.removeLiquidity(
             address(tokenA),
             address(tokenB),

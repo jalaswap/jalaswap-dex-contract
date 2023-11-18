@@ -7,11 +7,19 @@ import "../LENXPair.sol";
 
 library LENXLibrary {
 
+    error IdenticalAddresses();
+    error ZeroAddress();
+    error InsufficientAmount();
+    error InsufficientInputAmount();
+    error InsufficientOutputAmount();
+    error InsufficientLiquidity();
+    error InvalidPath();
+
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
     function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
-        require(tokenA != tokenB, "LENXLibrary: IDENTICAL_ADDRESSES");
+        if (tokenA == tokenB) revert IdenticalAddresses();
         (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
-        require(token0 != address(0), "LENXLibrary: ZERO_ADDRESS");
+        if (token0 == address(0)) revert ZeroAddress();
     }
 
     // calculates the CREATE2 address for a pair without making any external calls
@@ -30,9 +38,6 @@ library LENXLibrary {
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
                             keccak256(type(LENXPair).creationCode)
-                            // hex"74a5e4c5cacfc05ee0a7e11ff9c16f0cb4c651f6a19fb70a1009cb3696b0a443" // New init code hash (chiliz 231113)
-                           // hex"326cef2e32136146c033bfde85e6cc483f028e43d906ef5a685e8945c8e4fc2f" // init code (cypress 221214)
-                           // hex"ba377f497cd3ddeba6bda3896bba8208a16d374eb335b15084eb16be9b9bcfb7" // init code (baobab 221109, upgrade compile version to 0.8.0)
                         )
                     )
                 )
@@ -57,8 +62,8 @@ library LENXLibrary {
         uint256 reserveA,
         uint256 reserveB
     ) internal pure returns (uint256 amountB) {
-        require(amountA > 0, "LENXLibrary: INSUFFICIENT_AMOUNT");
-        require(reserveA > 0 && reserveB > 0, "LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        if (amountA == 0) revert InsufficientAmount();
+        if (reserveA == 0 || reserveB == 0) revert InsufficientLiquidity();
         amountB = (amountA * reserveB) / reserveA;
     }
 
@@ -68,8 +73,8 @@ library LENXLibrary {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountOut) {
-        require(amountIn > 0, "LENXLibrary: INSUFFICIENT_INPUT_AMOUNT");
-        require(reserveIn > 0 && reserveOut > 0, "LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        if (amountIn == 0) revert InsufficientInputAmount();
+        if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
         uint256 amountInWithFee = amountIn * 997;
         uint256 denominator = (reserveIn * 1000) + amountInWithFee;
         uint256 numerator = amountInWithFee * reserveOut;
@@ -82,8 +87,8 @@ library LENXLibrary {
         uint256 reserveIn,
         uint256 reserveOut
     ) internal pure returns (uint256 amountIn) {
-        require(amountOut > 0, "LENXLibrary: INSUFFICIENT_OUTPUT_AMOUNT");
-        require(reserveIn > 0 && reserveOut > 0, "LENXLibrary: INSUFFICIENT_LIQUIDITY");
+        if (amountOut == 0) revert InsufficientOutputAmount();
+        if (reserveIn == 0 || reserveOut == 0) revert InsufficientLiquidity();
         uint256 numerator = reserveIn * amountOut * 1000;
         uint256 denominator = (reserveOut - amountOut) * 997;
         amountIn = (numerator / denominator) + 1;
@@ -95,7 +100,7 @@ library LENXLibrary {
         uint256 amountIn,
         address[] memory path
     ) internal view returns (uint256[] memory amounts) {
-        require(path.length >= 2, "LENXLibrary: INVALID_PATH");
+        if (path.length < 2) revert InvalidPath();
         amounts = new uint256[](path.length);
         amounts[0] = amountIn;
         for (uint256 i; i < path.length - 1; i++) {
@@ -110,7 +115,7 @@ library LENXLibrary {
         uint256 amountOut,
         address[] memory path
     ) internal view returns (uint256[] memory amounts) {
-        require(path.length >= 2, "LENXLibrary: INVALID_PATH");
+        if (path.length < 2) revert InvalidPath();
         amounts = new uint256[](path.length);
         amounts[amounts.length - 1] = amountOut;
         for (uint256 i = path.length - 1; i > 0; i--) {

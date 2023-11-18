@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../contracts/LENXFactory.sol";
 import "../contracts/tokens/LENXERC20.sol";
 import "../contracts/LENXPair.sol";
+import "../contracts/interfaces/ILENXFactory.sol";
 import "./mocks/ERC20Mintable.sol";
 
 contract LENXFactory_Test is Test {
@@ -39,22 +40,22 @@ contract LENXFactory_Test is Test {
     }
 
     function test_CreatePairZeroAddress() public {
-        vm.expectRevert("LENX: ZERO_ADDRESS");
+        vm.expectRevert(ILENXFactory.ZeroAddress.selector);
         factory.createPair(address(0), address(token0));
 
-        vm.expectRevert("LENX: ZERO_ADDRESS");
+        vm.expectRevert(ILENXFactory.ZeroAddress.selector);
         factory.createPair(address(token1), address(0));
     }
 
     function test_CreatePairPairExists() public {
         factory.createPair(address(token1), address(token0));
 
-        vm.expectRevert("LENX: PAIR_EXISTS");
+        vm.expectRevert(ILENXFactory.PairExists.selector);
         factory.createPair(address(token1), address(token0));
     }
 
     function test_CreatePairIdenticalTokens() public {
-        vm.expectRevert("LENX: IDENTICAL_ADDRESSES");
+        vm.expectRevert(ILENXFactory.IdenticalAddresses.selector);
         factory.createPair(address(token0), address(token0));
     }
 

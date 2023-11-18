@@ -1,64 +1,60 @@
-import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
-import "@typechain/hardhat";
-import "hardhat-abi-exporter";
-import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-etherscan";
 import "dotenv/config";
 
-import type { HardhatUserConfig } from "hardhat/types";
-import { task } from "hardhat/config";
-
-task("accounts", "Prints the list of accounts", async (_args, hre) => {
-  const accounts = await hre.ethers.getSigners();
-  accounts.forEach(async (account) => console.info(account.address));
-});
-
-const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
-  networks: {
-    hardhat: {
-      allowUnlimitedContractSize: false,
-      hardfork: "berlin", // Berlin is used (temporarily) to avoid issues with coverage
-      mining: {
-        auto: true,
-        interval: 50000,
-      },
-      gasPrice: "auto",
-    },
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_KEY,
-  },
+export default {
   solidity: {
     compilers: [
       {
         version: "0.8.20",
-        settings: { optimizer: { enabled: true, runs: 888888 } },
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+        },
       },
       {
-        version: "0.4.18",
-        settings: { optimizer: { enabled: true, runs: 999 } },
+        version: "0.8.9",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+        },
+      },
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+        },
+      },
+      {
+        version: "0.6.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1,
+          },
+        },
       },
     ],
   },
-  paths: {
-    sources: "./contracts/",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+  networks: {
+    chiliz: {
+      allowUnlimitedContractSize: true,
+      url: "https://spicy-rpc.chiliz.com/",
+      chainId: 88882,
+      accounts: [process.env.TESTNET_KEY],
+      gas: "auto",
+      gasPrice: "auto",
+      runs: 0,
+    },
   },
-  abiExporter: {
-    path: "./abis",
-    runOnCompile: true,
-    clear: true,
-    flat: true,
-    pretty: false,
-    except: ["test*"],
-  },
-  gasReporter: {
-    enabled: !!process.env.REPORT_GAS,
-    excludeContracts: ["test*"],
+  mocha: {
+    timeout: 400000000,
   },
 };
-
-export default config;

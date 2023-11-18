@@ -122,7 +122,7 @@ contract LENXPair_Test is Test {
         token0.transfer(address(pair), 1000);
         token1.transfer(address(pair), 1000);
 
-        vm.expectRevert("LENX: INSUFFICIENT_LIQUIDITY_MINTED");
+        vm.expectRevert(LENXPair.InsufficientLiquidityMinted.selector);
         pair.mint(address(this));
     }
 
@@ -211,7 +211,7 @@ contract LENXPair_Test is Test {
         pair.mint(address(this));
 
         vm.prank(address(0xdeadbeef));
-        vm.expectRevert("LENX: INSUFFICIENT_LIQUIDITY_BURNED");
+        vm.expectRevert(LENXPair.InsufficientLiquidityBurned.selector);
         pair.burn(address(this));
     }
 
@@ -270,7 +270,7 @@ contract LENXPair_Test is Test {
         token1.transfer(address(pair), 2 ether);
         pair.mint(address(this));
 
-        vm.expectRevert("LENX: INSUFFICIENT_OUTPUT_AMOUNT");
+        vm.expectRevert(LENXPair.InsufficientOutputAmount.selector);
         pair.swap(0, 0, address(this), "");
     }
 
@@ -279,10 +279,10 @@ contract LENXPair_Test is Test {
         token1.transfer(address(pair), 2 ether);
         pair.mint(address(this));
 
-        vm.expectRevert("LENX: INSUFFICIENT_LIQUIDITY");
+        vm.expectRevert(LENXPair.InsufficientLiquidity.selector);
         pair.swap(0, 2.1 ether, address(this), "");
 
-        vm.expectRevert("LENX: INSUFFICIENT_LIQUIDITY");
+        vm.expectRevert(LENXPair.InsufficientLiquidity.selector);
         pair.swap(1.1 ether, 0, address(this), "");
     }
 
@@ -306,7 +306,7 @@ contract LENXPair_Test is Test {
 
         token0.transfer(address(pair), 0.1 ether);
 
-        vm.expectRevert("LENX: INVALID K");
+        vm.expectRevert(LENXPair.InvalidK.selector);
         pair.swap(0, 0.36 ether, address(this), "");
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.1 ether, "unexpected token0 balance");
@@ -321,7 +321,7 @@ contract LENXPair_Test is Test {
 
         token0.transfer(address(pair), 0.1 ether);
 
-        vm.expectRevert("LENX: INVALID K");
+        vm.expectRevert(LENXPair.InvalidK.selector);
         pair.swap(0, 0.181322178776029827 ether, address(this), "");
     }
 

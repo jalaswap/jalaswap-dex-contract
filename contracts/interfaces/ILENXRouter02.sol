@@ -5,6 +5,13 @@ pragma solidity ^0.8.0;
 import "./ILENXRouter01.sol";
 
 interface ILENXRouter02 is ILENXRouter01 {
+    error Expired();
+    error InsufficientBAmount();
+    error InsufficientAAmount();
+    error InsufficientOutputAmount();
+    error ExcessiveInputAmount();
+    error InvalidPath();
+
     function removeLiquidityCHZSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,
