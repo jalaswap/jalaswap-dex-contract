@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "../contracts/libraries/LENXLibrary.sol";
 import "../contracts/LENXFactory.sol";
 import "../contracts/LENXPair.sol";
-import "./mocks/ERC20Mintable.sol";
+import "../contracts/mocks/ERC20Mintable.sol";
 
 contract LENXLibrary_Test is Test {
     address feeSetter = address(69);

@@ -6,7 +6,7 @@ import "../contracts/LENXFactory.sol";
 import "../contracts/LENXPair.sol";
 import "../contracts/LENXRouter02.sol";
 import "../contracts/interfaces/ILENXRouter02.sol";
-import "./mocks/ERC20Mintable.sol";
+import "../contracts/mocks/ERC20Mintable.sol";
 
 contract LENXRouter02_Test is Test {
     address feeSetter = address(69);
