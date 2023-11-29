@@ -12,27 +12,27 @@ interface ILENXRouter02 is ILENXRouter01 {
     error ExcessiveInputAmount();
     error InvalidPath();
 
-    function removeLiquidityCHZSupportingFeeOnTransferTokens(
+    function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) external returns (uint256 amountCHZ);
+    ) external returns (uint256 amountETH);
 
-    function removeLiquidityCHZWithPermitSupportingFeeOnTransferTokens(
+    function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline,
         bool approveMax,
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external returns (uint256 amountCHZ);
+    ) external returns (uint256 amountETH);
 
     function swapExactTokensForTokensSupportingFeeOnTransferTokens(
         uint256 amountIn,
@@ -42,14 +42,14 @@ interface ILENXRouter02 is ILENXRouter01 {
         uint256 deadline
     ) external;
 
-    function swapExactCHZForTokensSupportingFeeOnTransferTokens(
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external payable;
 
-    function swapExactTokensForCHZSupportingFeeOnTransferTokens(
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
         uint256 amountIn,
         uint256 amountOutMin,
         address[] calldata path,

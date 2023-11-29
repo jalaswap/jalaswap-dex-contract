@@ -7,24 +7,24 @@ import "./libraries/TransferHelper.sol";
 import "./interfaces/ILENXFactory.sol";
 import "./interfaces/IERC20.sol";
 import "./interfaces/ILENXRouter02.sol";
-import "./interfaces/IWCHZ.sol";
+import "./interfaces/IWETH.sol";
 
 contract LENXRouter02 is ILENXRouter02 {
     address public immutable override factory;
-    address public immutable override WCHZ;
+    address public immutable override WETH;
 
     modifier ensure(uint256 deadline) {
         if (deadline < block.timestamp) revert Expired();
         _;
     }
 
-    constructor(address _factory, address _WCHZ) {
+    constructor(address _factory, address _WETH) {
         factory = _factory;
-        WCHZ = _WCHZ;
+        WETH = _WETH;
     }
 
     receive() external payable {
-        assert(msg.sender == WCHZ); // only accept CHZ via fallback from the WCHZ contract
+        assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
     // **** ADD LIQUIDITY ****
@@ -74,11 +74,11 @@ contract LENXRouter02 is ILENXRouter02 {
         liquidity = ILENXPair(pair).mint(to);
     }
 
-    function addLiquidityCHZ(
+    function addLiquidityETH(
         address token,
         uint256 amountTokenDesired,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline
     )
@@ -87,23 +87,23 @@ contract LENXRouter02 is ILENXRouter02 {
         virtual
         override
         ensure(deadline)
-        returns (uint256 amountToken, uint256 amountCHZ, uint256 liquidity)
+        returns (uint256 amountToken, uint256 amountETH, uint256 liquidity)
     {
-        (amountToken, amountCHZ) = _addLiquidity(
+        (amountToken, amountETH) = _addLiquidity(
             token,
-            WCHZ,
+            WETH,
             amountTokenDesired,
             msg.value,
             amountTokenMin,
-            amountCHZMin
+            amountETHMin
         );
-        address pair = LENXLibrary.pairFor(factory, token, WCHZ);
+        address pair = LENXLibrary.pairFor(factory, token, WETH);
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
-        IWCHZ(WCHZ).deposit{value: amountCHZ}();
-        assert(IWCHZ(WCHZ).transfer(pair, amountCHZ));
+        IWETH(WETH).deposit{value: amountETH}();
+        assert(IWETH(WETH).transfer(pair, amountETH));
         liquidity = ILENXPair(pair).mint(to);
         // refund dust eth, if any
-        if (msg.value > amountCHZ) TransferHelper.safeTransferCHZ(msg.sender, msg.value - amountCHZ);
+        if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
 
     // **** REMOVE LIQUIDITY ****
@@ -125,26 +125,26 @@ contract LENXRouter02 is ILENXRouter02 {
         if (amountB < amountBMin) revert InsufficientBAmount();
     }
 
-    function removeLiquidityCHZ(
+    function removeLiquidityETH(
         address token,
         uint256 liquidity,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountCHZ) {
-        (amountToken, amountCHZ) = removeLiquidity(
+    ) public virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
+        (amountToken, amountETH) = removeLiquidity(
             token,
-            WCHZ,
+            WETH,
             liquidity,
             amountTokenMin,
-            amountCHZMin,
+            amountETHMin,
             address(this),
             deadline
         );
         TransferHelper.safeTransfer(token, to, amountToken);
-        IWCHZ(WCHZ).withdraw(amountCHZ);
-        TransferHelper.safeTransferCHZ(to, amountCHZ);
+        IWETH(WETH).withdraw(amountETH);
+        TransferHelper.safeTransferETH(to, amountETH);
     }
 
     function removeLiquidityWithPermit(
@@ -166,59 +166,59 @@ contract LENXRouter02 is ILENXRouter02 {
         (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
     }
 
-    function removeLiquidityCHZWithPermit(
+    function removeLiquidityETHWithPermit(
         address token,
         uint256 liquidity,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline,
         bool approveMax,
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external virtual override returns (uint256 amountToken, uint256 amountCHZ) {
-        address pair = LENXLibrary.pairFor(factory, token, WCHZ);
+    ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
+        address pair = LENXLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint).max : liquidity;
         ILENXPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
-        (amountToken, amountCHZ) = removeLiquidityCHZ(token, liquidity, amountTokenMin, amountCHZMin, to, deadline);
+        (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
     }
 
     // **** REMOVE LIQUIDITY (supporting fee-on-transfer tokens) ****
-    function removeLiquidityCHZSupportingFeeOnTransferTokens(
+    function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountCHZ) {
-        (, amountCHZ) = removeLiquidity(token, WCHZ, liquidity, amountTokenMin, amountCHZMin, address(this), deadline);
+    ) public virtual override ensure(deadline) returns (uint256 amountETH) {
+        (, amountETH) = removeLiquidity(token, WETH, liquidity, amountTokenMin, amountETHMin, address(this), deadline);
         TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
-        IWCHZ(WCHZ).withdraw(amountCHZ);
-        TransferHelper.safeTransferCHZ(to, amountCHZ);
+        IWETH(WETH).withdraw(amountETH);
+        TransferHelper.safeTransferETH(to, amountETH);
     }
 
-    function removeLiquidityCHZWithPermitSupportingFeeOnTransferTokens(
+    function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
         address token,
         uint256 liquidity,
         uint256 amountTokenMin,
-        uint256 amountCHZMin,
+        uint256 amountETHMin,
         address to,
         uint256 deadline,
         bool approveMax,
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external virtual override returns (uint256 amountCHZ) {
-        address pair = LENXLibrary.pairFor(factory, token, WCHZ);
+    ) external virtual override returns (uint256 amountETH) {
+        address pair = LENXLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint).max : liquidity;
         ILENXPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
-        amountCHZ = removeLiquidityCHZSupportingFeeOnTransferTokens(
+        amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(
             token,
             liquidity,
             amountTokenMin,
-            amountCHZMin,
+            amountETHMin,
             to,
             deadline
         );
@@ -275,28 +275,28 @@ contract LENXRouter02 is ILENXRouter02 {
         _swap(amounts, path, to);
     }
 
-    function swapExactCHZForTokens(
+    function swapExactETHForTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[0] != WCHZ) revert InvalidPath();
+        if (path[0] != WETH) revert InvalidPath();
         amounts = LENXLibrary.getAmountsOut(factory, msg.value, path);
         if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
-        IWCHZ(WCHZ).deposit{value: amounts[0]}();
-        assert(IWCHZ(WCHZ).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        IWETH(WETH).deposit{value: amounts[0]}();
+        assert(IWETH(WETH).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
     }
 
-    function swapTokensForExactCHZ(
+    function swapTokensForExactETH(
         uint256 amountOut,
         uint256 amountInMax,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[path.length - 1] != WCHZ) revert InvalidPath();
+        if (path[path.length - 1] != WETH) revert InvalidPath();
         amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
         if (amounts[0] > amountInMax) revert ExcessiveInputAmount();
         TransferHelper.safeTransferFrom(
@@ -306,18 +306,18 @@ contract LENXRouter02 is ILENXRouter02 {
             amounts[0]
         );
         _swap(amounts, path, address(this));
-        IWCHZ(WCHZ).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferCHZ(to, amounts[amounts.length - 1]);
+        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
+        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
 
-    function swapExactTokensForCHZ(
+    function swapExactTokensForETH(
         uint256 amountIn,
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[path.length - 1] != WCHZ) revert InvalidPath();
+        if (path[path.length - 1] != WETH) revert InvalidPath();
         amounts = LENXLibrary.getAmountsOut(factory, amountIn, path);
         if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
@@ -327,24 +327,24 @@ contract LENXRouter02 is ILENXRouter02 {
             amounts[0]
         );
         _swap(amounts, path, address(this));
-        IWCHZ(WCHZ).withdraw(amounts[amounts.length - 1]);
-        TransferHelper.safeTransferCHZ(to, amounts[amounts.length - 1]);
+        IWETH(WETH).withdraw(amounts[amounts.length - 1]);
+        TransferHelper.safeTransferETH(to, amounts[amounts.length - 1]);
     }
 
-    function swapCHZForExactTokens(
+    function swapETHForExactTokens(
         uint256 amountOut,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[0] != WCHZ) revert InvalidPath();
+        if (path[0] != WETH) revert InvalidPath();
         amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
         if (amounts[0] > msg.value) revert ExcessiveInputAmount();
-        IWCHZ(WCHZ).deposit{value: amounts[0]}();
-        assert(IWCHZ(WCHZ).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        IWETH(WETH).deposit{value: amounts[0]}();
+        assert(IWETH(WETH).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
         // refund dust eth, if any
-        if (msg.value > amounts[0]) TransferHelper.safeTransferCHZ(msg.sender, msg.value - amounts[0]);
+        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
     }
 
     // **** SWAP (supporting fee-on-transfer tokens) ****
@@ -387,36 +387,36 @@ contract LENXRouter02 is ILENXRouter02 {
             revert InsufficientOutputAmount();
     }
 
-    function swapExactCHZForTokensSupportingFeeOnTransferTokens(
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) {
-        if (path[0] != WCHZ) revert InvalidPath();
+        if (path[0] != WETH) revert InvalidPath();
         uint256 amountIn = msg.value;
-        IWCHZ(WCHZ).deposit{value: amountIn}();
-        assert(IWCHZ(WCHZ).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amountIn));
+        IWETH(WETH).deposit{value: amountIn}();
+        assert(IWETH(WETH).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amountIn));
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         if (IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore < amountOutMin)
             revert InsufficientOutputAmount();
     }
 
-    function swapExactTokensForCHZSupportingFeeOnTransferTokens(
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
         uint256 amountIn,
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) {
-        if (path[path.length - 1] != WCHZ) revert InvalidPath();
+        if (path[path.length - 1] != WETH) revert InvalidPath();
         TransferHelper.safeTransferFrom(path[0], msg.sender, LENXLibrary.pairFor(factory, path[0], path[1]), amountIn);
         _swapSupportingFeeOnTransferTokens(path, address(this));
-        uint256 amountOut = IERC20(WCHZ).balanceOf(address(this));
+        uint256 amountOut = IERC20(WETH).balanceOf(address(this));
         if (amountOut < amountOutMin) revert InsufficientOutputAmount();
-        IWCHZ(WCHZ).withdraw(amountOut);
-        TransferHelper.safeTransferCHZ(to, amountOut);
+        IWETH(WETH).withdraw(amountOut);
+        TransferHelper.safeTransferETH(to, amountOut);
     }
 
     // **** LIBRARY FUNCTIONS ****

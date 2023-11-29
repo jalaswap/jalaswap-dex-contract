@@ -444,7 +444,7 @@ contract Flashloaner {
         LENXPair(pairAddress).swap(amount0Out, amount1Out, address(this), abi.encode(tokenAddress));
     }
 
-    function lenxCall(address sender, uint256 amount0Out, uint256 amount1Out, bytes calldata data) public {
+    function lenxCall(address, uint256, uint256, bytes calldata data) public {
         address tokenAddress = abi.decode(data, (address));
         uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
 

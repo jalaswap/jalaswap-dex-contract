@@ -17,16 +17,16 @@ contract Deployment is Script {
         uint256 chainId = block.chainid;
         uint256 deployerPrivateKey;
         address feeToSetter;
-        address WCHZ;
+        address WETH;
 
         if (chainId == 88888) {
             deployerPrivateKey = vm.envUint("MAINNET_KEY");
             feeToSetter = 0x649f37caB0f677dd157E2074247194603FDB33d3;
-            WCHZ = 0x677F7e16C7Dd57be1D4C8aD1244883214953DC47;
+            WETH = 0x677F7e16C7Dd57be1D4C8aD1244883214953DC47;
         } else if (chainId == 88882) {
             deployerPrivateKey = vm.envUint("TESTNET_KEY");
             feeToSetter = 0x649f37caB0f677dd157E2074247194603FDB33d3;
-            WCHZ = 0x678c34581db0a7808d0aC669d7025f1408C9a3C6;
+            WETH = 0x678c34581db0a7808d0aC669d7025f1408C9a3C6;
         } else {
             revert ChainIdInvalid(chainId);
         }
@@ -34,7 +34,7 @@ contract Deployment is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         LENXFactory factory = new LENXFactory(feeToSetter);
-        LENXRouter02 router = new LENXRouter02(address(factory), WCHZ);
+        LENXRouter02 router = new LENXRouter02(address(factory), WETH);
 
         console.log("FACTORY: ", address(factory));
         console.log("ROUTER: ", address(router));

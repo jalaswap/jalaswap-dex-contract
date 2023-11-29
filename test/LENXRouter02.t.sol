@@ -10,7 +10,7 @@ import "../contracts/mocks/ERC20Mintable.sol";
 
 contract LENXRouter02_Test is Test {
     address feeSetter = address(69);
-    ERC20Mintable WCHZ;
+    ERC20Mintable WETH;
 
     LENXRouter02 router;
     LENXFactory factory;
@@ -20,10 +20,10 @@ contract LENXRouter02_Test is Test {
     ERC20Mintable tokenC;
 
     function setUp() public {
-        WCHZ = new ERC20Mintable("Wrapped CHZ", "WCHZ");
+        WETH = new ERC20Mintable("Wrapped ETH", "WETH");
 
         factory = new LENXFactory(feeSetter);
-        router = new LENXRouter02(address(factory), address(WCHZ));
+        router = new LENXRouter02(address(factory), address(WETH));
 
         tokenA = new ERC20Mintable("Token A", "TKNA");
         tokenB = new ERC20Mintable("Token B", "TKNB");
