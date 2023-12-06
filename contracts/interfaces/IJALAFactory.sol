@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface ILENXFactory {
+interface IJALAFactory {
     error OnlyFeeSetter();
     error IdenticalAddresses();
     error PairExists();

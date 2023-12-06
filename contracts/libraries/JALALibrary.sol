@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../interfaces/ILENXPair.sol";
-import "../LENXPair.sol";
+import "../interfaces/IJALAPair.sol";
+import "../JALAPair.sol";
 
-library LENXLibrary {
+library JALALibrary {
 
     error IdenticalAddresses();
     error ZeroAddress();
@@ -37,7 +37,7 @@ library LENXLibrary {
                             hex"ff",
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
-                            keccak256(type(LENXPair).creationCode)
+                            keccak256(type(JALAPair).creationCode)
                         )
                     )
                 )
@@ -52,7 +52,7 @@ library LENXLibrary {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1, ) = ILENXPair(pairFor(factory, tokenA, tokenB)).getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = IJALAPair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 

@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "./libraries/LENXLibrary.sol";
+import "./libraries/JALALibrary.sol";
 import "./libraries/TransferHelper.sol";
-import "./interfaces/ILENXFactory.sol";
+import "./interfaces/IJALAFactory.sol";
 import "./interfaces/IERC20.sol";
-import "./interfaces/ILENXRouter02.sol";
+import "./interfaces/IJALARouter02.sol";
 import "./interfaces/IWETH.sol";
 
-contract LENXRouter02 is ILENXRouter02 {
+contract JALARouter02 is IJALARouter02 {
     address public immutable override factory;
     address public immutable override WETH;
 
@@ -37,19 +37,19 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 amountBMin
     ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // create the pair if it doesn't exist yet
-        if (ILENXFactory(factory).getPair(tokenA, tokenB) == address(0)) {
-            ILENXFactory(factory).createPair(tokenA, tokenB);
+        if (IJALAFactory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IJALAFactory(factory).createPair(tokenA, tokenB);
         }
-        (uint256 reserveA, uint256 reserveB) = LENXLibrary.getReserves(factory, tokenA, tokenB);
+        (uint256 reserveA, uint256 reserveB) = JALALibrary.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
-            uint256 amountBOptimal = LENXLibrary.quote(amountADesired, reserveA, reserveB);
+            uint256 amountBOptimal = JALALibrary.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
                 if (amountBOptimal < amountBMin) revert InsufficientBAmount();
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
-                uint256 amountAOptimal = LENXLibrary.quote(amountBDesired, reserveB, reserveA);
+                uint256 amountAOptimal = JALALibrary.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
                 if (amountAOptimal < amountAMin) revert InsufficientAAmount();
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
@@ -68,10 +68,10 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB, uint256 liquidity) {
         (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
-        address pair = LENXLibrary.pairFor(factory, tokenA, tokenB);
+        address pair = JALALibrary.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidity = ILENXPair(pair).mint(to);
+        liquidity = IJALAPair(pair).mint(to);
     }
 
     function addLiquidityETH(
@@ -97,11 +97,11 @@ contract LENXRouter02 is ILENXRouter02 {
             amountTokenMin,
             amountETHMin
         );
-        address pair = LENXLibrary.pairFor(factory, token, WETH);
+        address pair = JALALibrary.pairFor(factory, token, WETH);
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         IWETH(WETH).deposit{value: amountETH}();
         assert(IWETH(WETH).transfer(pair, amountETH));
-        liquidity = ILENXPair(pair).mint(to);
+        liquidity = IJALAPair(pair).mint(to);
         // refund dust eth, if any
         if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
@@ -116,10 +116,10 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
-        address pair = LENXLibrary.pairFor(factory, tokenA, tokenB);
-        ILENXPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
-        (uint256 amount0, uint256 amount1) = ILENXPair(pair).burn(to);
-        (address token0, ) = LENXLibrary.sortTokens(tokenA, tokenB);
+        address pair = JALALibrary.pairFor(factory, tokenA, tokenB);
+        IJALAPair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
+        (uint256 amount0, uint256 amount1) = IJALAPair(pair).burn(to);
+        (address token0, ) = JALALibrary.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
         if (amountA < amountAMin) revert InsufficientAAmount();
         if (amountB < amountBMin) revert InsufficientBAmount();
@@ -160,9 +160,9 @@ contract LENXRouter02 is ILENXRouter02 {
         bytes32 r,
         bytes32 s
     ) external virtual override returns (uint256 amountA, uint256 amountB) {
-        address pair = LENXLibrary.pairFor(factory, tokenA, tokenB);
+        address pair = JALALibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? type(uint).max : liquidity;
-        ILENXPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IJALAPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
     }
 
@@ -178,9 +178,9 @@ contract LENXRouter02 is ILENXRouter02 {
         bytes32 r,
         bytes32 s
     ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
-        address pair = LENXLibrary.pairFor(factory, token, WETH);
+        address pair = JALALibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint).max : liquidity;
-        ILENXPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IJALAPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
     }
 
@@ -211,9 +211,9 @@ contract LENXRouter02 is ILENXRouter02 {
         bytes32 r,
         bytes32 s
     ) external virtual override returns (uint256 amountETH) {
-        address pair = LENXLibrary.pairFor(factory, token, WETH);
+        address pair = JALALibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? type(uint).max : liquidity;
-        ILENXPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        IJALAPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
         amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(
             token,
             liquidity,
@@ -229,13 +229,13 @@ contract LENXRouter02 is ILENXRouter02 {
     function _swap(uint256[] memory amounts, address[] memory path, address _to) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0, ) = LENXLibrary.sortTokens(input, output);
+            (address token0, ) = JALALibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
-            address to = i < path.length - 2 ? LENXLibrary.pairFor(factory, output, path[i + 2]) : _to;
-            ILENXPair(LENXLibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
+            address to = i < path.length - 2 ? JALALibrary.pairFor(factory, output, path[i + 2]) : _to;
+            IJALAPair(JALALibrary.pairFor(factory, input, output)).swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
 
@@ -246,12 +246,12 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = LENXLibrary.getAmountsOut(factory, amountIn, path);
-        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
+        amounts = JALALibrary.getAmountsOut(factory, amountIn, path);
+        if (amounts[amounts.length - 1] < amountOutMin) revert JALALibrary.InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            LENXLibrary.pairFor(factory, path[0], path[1]),
+            JALALibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to);
@@ -264,12 +264,12 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
+        amounts = JALALibrary.getAmountsIn(factory, amountOut, path);
         if (amounts[0] > amountInMax) revert ExcessiveInputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            LENXLibrary.pairFor(factory, path[0], path[1]),
+            JALALibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, to);
@@ -281,11 +281,11 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[0] != WETH) revert InvalidPath();
-        amounts = LENXLibrary.getAmountsOut(factory, msg.value, path);
-        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
+        if (path[0] != WETH) revert JALALibrary.InvalidPath();
+        amounts = JALALibrary.getAmountsOut(factory, msg.value, path);
+        if (amounts[amounts.length - 1] < amountOutMin) revert JALALibrary.InsufficientOutputAmount();
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWETH(WETH).transfer(JALALibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
     }
 
@@ -296,13 +296,13 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[path.length - 1] != WETH) revert InvalidPath();
-        amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
+        if (path[path.length - 1] != WETH) revert JALALibrary.InvalidPath();
+        amounts = JALALibrary.getAmountsIn(factory, amountOut, path);
         if (amounts[0] > amountInMax) revert ExcessiveInputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            LENXLibrary.pairFor(factory, path[0], path[1]),
+            JALALibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this));
@@ -317,13 +317,13 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[path.length - 1] != WETH) revert InvalidPath();
-        amounts = LENXLibrary.getAmountsOut(factory, amountIn, path);
-        if (amounts[amounts.length - 1] < amountOutMin) revert InsufficientOutputAmount();
+        if (path[path.length - 1] != WETH) revert JALALibrary.InvalidPath();
+        amounts = JALALibrary.getAmountsOut(factory, amountIn, path);
+        if (amounts[amounts.length - 1] < amountOutMin) revert JALALibrary.InsufficientOutputAmount();
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
-            LENXLibrary.pairFor(factory, path[0], path[1]),
+            JALALibrary.pairFor(factory, path[0], path[1]),
             amounts[0]
         );
         _swap(amounts, path, address(this));
@@ -337,11 +337,11 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
-        if (path[0] != WETH) revert InvalidPath();
-        amounts = LENXLibrary.getAmountsIn(factory, amountOut, path);
+        if (path[0] != WETH) revert JALALibrary.InvalidPath();
+        amounts = JALALibrary.getAmountsIn(factory, amountOut, path);
         if (amounts[0] > msg.value) revert ExcessiveInputAmount();
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(IWETH(WETH).transfer(JALALibrary.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
         // refund dust eth, if any
         if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
@@ -352,8 +352,8 @@ contract LENXRouter02 is ILENXRouter02 {
     function _swapSupportingFeeOnTransferTokens(address[] memory path, address _to) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
-            (address token0, ) = LENXLibrary.sortTokens(input, output);
-            ILENXPair pair = ILENXPair(LENXLibrary.pairFor(factory, input, output));
+            (address token0, ) = JALALibrary.sortTokens(input, output);
+            IJALAPair pair = IJALAPair(JALALibrary.pairFor(factory, input, output));
             uint256 amountInput;
             uint256 amountOutput;
             {
@@ -363,12 +363,12 @@ contract LENXRouter02 is ILENXRouter02 {
                     ? (reserve0, reserve1)
                     : (reserve1, reserve0);
                 amountInput = IERC20(input).balanceOf(address(pair)) - reserveInput;
-                amountOutput = LENXLibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
+                amountOutput = JALALibrary.getAmountOut(amountInput, reserveInput, reserveOutput);
             }
             (uint256 amount0Out, uint256 amount1Out) = input == token0
                 ? (uint256(0), amountOutput)
                 : (amountOutput, uint256(0));
-            address to = i < path.length - 2 ? LENXLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            address to = i < path.length - 2 ? JALALibrary.pairFor(factory, output, path[i + 2]) : _to;
             pair.swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
@@ -380,11 +380,11 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) {
-        TransferHelper.safeTransferFrom(path[0], msg.sender, LENXLibrary.pairFor(factory, path[0], path[1]), amountIn);
+        TransferHelper.safeTransferFrom(path[0], msg.sender, JALALibrary.pairFor(factory, path[0], path[1]), amountIn);
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         if (IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore < amountOutMin)
-            revert InsufficientOutputAmount();
+            revert JALALibrary.InsufficientOutputAmount();
     }
 
     function swapExactETHForTokensSupportingFeeOnTransferTokens(
@@ -393,14 +393,14 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external payable virtual override ensure(deadline) {
-        if (path[0] != WETH) revert InvalidPath();
+        if (path[0] != WETH) revert JALALibrary.InvalidPath();
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(LENXLibrary.pairFor(factory, path[0], path[1]), amountIn));
+        assert(IWETH(WETH).transfer(JALALibrary.pairFor(factory, path[0], path[1]), amountIn));
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         if (IERC20(path[path.length - 1]).balanceOf(to) - balanceBefore < amountOutMin)
-            revert InsufficientOutputAmount();
+            revert JALALibrary.InsufficientOutputAmount();
     }
 
     function swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -410,11 +410,11 @@ contract LENXRouter02 is ILENXRouter02 {
         address to,
         uint256 deadline
     ) external virtual override ensure(deadline) {
-        if (path[path.length - 1] != WETH) revert InvalidPath();
-        TransferHelper.safeTransferFrom(path[0], msg.sender, LENXLibrary.pairFor(factory, path[0], path[1]), amountIn);
+        if (path[path.length - 1] != WETH) revert JALALibrary.InvalidPath();
+        TransferHelper.safeTransferFrom(path[0], msg.sender, JALALibrary.pairFor(factory, path[0], path[1]), amountIn);
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        if (amountOut < amountOutMin) revert InsufficientOutputAmount();
+        if (amountOut < amountOutMin) revert JALALibrary.InsufficientOutputAmount();
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
     }
@@ -425,7 +425,7 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 reserveA,
         uint256 reserveB
     ) public pure virtual override returns (uint256 amountB) {
-        return LENXLibrary.quote(amountA, reserveA, reserveB);
+        return JALALibrary.quote(amountA, reserveA, reserveB);
     }
 
     function getAmountOut(
@@ -433,7 +433,7 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure virtual override returns (uint256 amountOut) {
-        return LENXLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
+        return JALALibrary.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
     function getAmountIn(
@@ -441,24 +441,24 @@ contract LENXRouter02 is ILENXRouter02 {
         uint256 reserveIn,
         uint256 reserveOut
     ) public pure virtual override returns (uint256 amountIn) {
-        return LENXLibrary.getAmountIn(amountOut, reserveIn, reserveOut);
+        return JALALibrary.getAmountIn(amountOut, reserveIn, reserveOut);
     }
 
     function getAmountsOut(
         uint256 amountIn,
         address[] memory path
     ) public view virtual override returns (uint256[] memory amounts) {
-        return LENXLibrary.getAmountsOut(factory, amountIn, path);
+        return JALALibrary.getAmountsOut(factory, amountIn, path);
     }
 
     function getAmountsIn(
         uint256 amountOut,
         address[] memory path
     ) public view virtual override returns (uint256[] memory amounts) {
-        return LENXLibrary.getAmountsIn(factory, amountOut, path);
+        return JALALibrary.getAmountsIn(factory, amountOut, path);
     }
 
     function getPairInAdvance(address tokenA, address tokenB) public view virtual override returns (address) {
-        return LENXLibrary.pairFor(factory, tokenA, tokenB);
+        return JALALibrary.pairFor(factory, tokenA, tokenB);
     }
 }

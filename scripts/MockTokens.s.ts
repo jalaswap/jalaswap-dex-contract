@@ -6,7 +6,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log(`Deployer: ${deployer.address} (${ethers.utils.formatEther(await deployer.getBalance())} ETH)`);
 
-  // Deploy LENXFactory with the address of the LENX token
+  // Deploy JALAFactory with the address of the JALA token
   const erc20MintableFactory = await ethers.getContractFactory("ERC20Mintable");
 
   const TKNAAddress = "";

@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/ILENXFactory.sol";
+import "./interfaces/IJALAFactory.sol";
 import "./libraries/SafeERC20.sol";
-import "./LENXPair.sol";
+import "./JALAPair.sol";
 
-contract LENXFactory is ILENXFactory {
+contract JALAFactory is IJALAFactory {
     using SafeERC20 for IERC20;
 
     address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
@@ -36,7 +36,7 @@ contract LENXFactory is ILENXFactory {
     }
 
     function pairCodeHash() external pure returns (bytes32) {
-        return keccak256(type(LENXPair).creationCode);
+        return keccak256(type(JALAPair).creationCode);
     }
 
     function createPair(address tokenA, address tokenB) external override returns (address pair) {
@@ -44,12 +44,12 @@ contract LENXFactory is ILENXFactory {
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         if (token0 == address(0)) revert ZeroAddress();
         if (getPair[token0][token1] != address(0)) revert PairExists();
-        bytes memory bytecode = type(LENXPair).creationCode;
+        bytes memory bytecode = type(JALAPair).creationCode;
         bytes32 salt = keccak256(abi.encodePacked(token0, token1));
         assembly {
             pair := create2(0, add(bytecode, 32), mload(bytecode), salt)
         }
-        LENXPair(pair).initialize(token0, token1);
+        JALAPair(pair).initialize(token0, token1);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);

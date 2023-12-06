@@ -2,15 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "./ILENXRouter01.sol";
+import "./IJALARouter01.sol";
 
-interface ILENXRouter02 is ILENXRouter01 {
+interface IJALARouter02 is IJALARouter01 {
     error Expired();
     error InsufficientBAmount();
     error InsufficientAAmount();
-    error InsufficientOutputAmount();
     error ExcessiveInputAmount();
-    error InvalidPath();
 
     function removeLiquidityETHSupportingFeeOnTransferTokens(
         address token,

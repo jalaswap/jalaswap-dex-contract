@@ -2,20 +2,20 @@
 pragma solidity ^0.8.10;
 
 import "forge-std/Test.sol";
-import "../contracts/LENXFactory.sol";
-import "../contracts/tokens/LENXERC20.sol";
-import "../contracts/LENXPair.sol";
+import "../contracts/JALAFactory.sol";
+import "../contracts/tokens/JALAERC20.sol";
+import "../contracts/JALAPair.sol";
 import "../contracts/libraries/UQ112x112.sol";
 import "../contracts/mocks/ERC20Mintable.sol";
 
-contract LENXPair_Test is Test {
+contract JALAPair_Test is Test {
     address feeSetter = address(69);
-    LENXERC20 lenx;
+    JALAERC20 jala;
 
     ERC20Mintable token0;
     ERC20Mintable token1;
-    LENXFactory factory;
-    LENXPair pair;
+    JALAFactory factory;
+    JALAPair pair;
     TestUser testUser;
 
     function setUp() public {
@@ -24,9 +24,9 @@ contract LENXPair_Test is Test {
         token0 = new ERC20Mintable("Token A", "TKNA");
         token1 = new ERC20Mintable("Token B", "TKNB");
 
-        factory = new LENXFactory(feeSetter);
+        factory = new JALAFactory(feeSetter);
         address pairAddress = factory.createPair(address(token0), address(token1));
-        pair = LENXPair(pairAddress);
+        pair = JALAPair(pairAddress);
 
         token0.mint(10 ether, address(this));
         token1.mint(10 ether, address(this));
@@ -121,7 +121,7 @@ contract LENXPair_Test is Test {
         token0.transfer(address(pair), 1000);
         token1.transfer(address(pair), 1000);
 
-        vm.expectRevert(LENXPair.InsufficientLiquidityMinted.selector);
+        vm.expectRevert(JALAPair.InsufficientLiquidityMinted.selector);
         pair.mint(address(this));
     }
 
@@ -210,7 +210,7 @@ contract LENXPair_Test is Test {
         pair.mint(address(this));
 
         vm.prank(address(0xdeadbeef));
-        vm.expectRevert(LENXPair.InsufficientLiquidityBurned.selector);
+        vm.expectRevert(JALAPair.InsufficientLiquidityBurned.selector);
         pair.burn(address(this));
     }
 
@@ -269,7 +269,7 @@ contract LENXPair_Test is Test {
         token1.transfer(address(pair), 2 ether);
         pair.mint(address(this));
 
-        vm.expectRevert(LENXPair.InsufficientOutputAmount.selector);
+        vm.expectRevert(JALAPair.InsufficientOutputAmount.selector);
         pair.swap(0, 0, address(this), "");
     }
 
@@ -278,10 +278,10 @@ contract LENXPair_Test is Test {
         token1.transfer(address(pair), 2 ether);
         pair.mint(address(this));
 
-        vm.expectRevert(LENXPair.InsufficientLiquidity.selector);
+        vm.expectRevert(JALAPair.InsufficientLiquidity.selector);
         pair.swap(0, 2.1 ether, address(this), "");
 
-        vm.expectRevert(LENXPair.InsufficientLiquidity.selector);
+        vm.expectRevert(JALAPair.InsufficientLiquidity.selector);
         pair.swap(1.1 ether, 0, address(this), "");
     }
 
@@ -305,7 +305,7 @@ contract LENXPair_Test is Test {
 
         token0.transfer(address(pair), 0.1 ether);
 
-        vm.expectRevert(LENXPair.InvalidK.selector);
+        vm.expectRevert(JALAPair.InvalidK.selector);
         pair.swap(0, 0.36 ether, address(this), "");
 
         assertEq(token0.balanceOf(address(this)), 10 ether - 1 ether - 0.1 ether, "unexpected token0 balance");
@@ -320,7 +320,7 @@ contract LENXPair_Test is Test {
 
         token0.transfer(address(pair), 0.1 ether);
 
-        vm.expectRevert(LENXPair.InvalidK.selector);
+        vm.expectRevert(JALAPair.InvalidK.selector);
         pair.swap(0, 0.181322178776029827 ether, address(this), "");
     }
 
@@ -418,13 +418,13 @@ contract TestUser {
         ERC20(token0Address_).transfer(pairAddress_, amount0_);
         ERC20(token1Address_).transfer(pairAddress_, amount1_);
 
-        LENXPair(pairAddress_).mint(address(this));
+        JALAPair(pairAddress_).mint(address(this));
     }
 
     function removeLiquidity(address pairAddress_) public {
         uint256 liquidity = ERC20(pairAddress_).balanceOf(address(this));
         ERC20(pairAddress_).transfer(pairAddress_, liquidity);
-        LENXPair(pairAddress_).burn(address(this));
+        JALAPair(pairAddress_).burn(address(this));
     }
 }
 
@@ -441,10 +441,10 @@ contract Flashloaner {
             expectedLoanAmount = amount1Out;
         }
 
-        LENXPair(pairAddress).swap(amount0Out, amount1Out, address(this), abi.encode(tokenAddress));
+        JALAPair(pairAddress).swap(amount0Out, amount1Out, address(this), abi.encode(tokenAddress));
     }
 
-    function lenxCall(address, uint256, uint256, bytes calldata data) public {
+    function jalaCall(address, uint256, uint256, bytes calldata data) public {
         address tokenAddress = abi.decode(data, (address));
         uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
 

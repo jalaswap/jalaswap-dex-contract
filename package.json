@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "description": "Solidity smart contracts template ",
   "main": "index.js",
-  "author": "LENX",
+  "author": "JALA",
   "license": "MIT",
   "private": true,
   "keywords": [
-    "lenx"
+    "jala"
   ],
-  "homepage": "https://lenx.finance/",
-  "bugs": "https://github.com/lenx-protocol/lenx-contracts/issues",
+  "homepage": "https://jala.finance/",
+  "bugs": "https://github.com/jala-protocol/jala-contracts/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lenx-protocol/lenx-contracts"
+    "url": "https://github.com/jala-protocol/jala-contracts"
   },
   "scripts": {
     "compile": "hardhat compile",
