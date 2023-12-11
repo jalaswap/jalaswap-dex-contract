@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "description": "Solidity smart contracts template ",
   "main": "index.js",
-  "author": "JALA",
+  "author": "CAPO",
   "license": "MIT",
   "private": true,
   "keywords": [
-    "jala"
+    "capo"
   ],
-  "homepage": "https://jala.finance/",
-  "bugs": "https://github.com/jala-protocol/jala-contracts/issues",
+  "homepage": "https://capo.finance/",
+  "bugs": "https://github.com/capo-protocol/capo-contracts/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jala-protocol/jala-contracts"
+    "url": "https://github.com/capo-protocol/capo-contracts"
   },
   "scripts": {
     "compile": "hardhat compile",

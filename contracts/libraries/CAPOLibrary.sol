@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../interfaces/IJALAPair.sol";
-import "../JALAPair.sol";
+import "../interfaces/ICAPOPair.sol";
+import "../CAPOPair.sol";
 
-library JALALibrary {
+library CAPOLibrary {
 
     error IdenticalAddresses();
     error ZeroAddress();
@@ -37,7 +37,7 @@ library JALALibrary {
                             hex"ff",
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
-                            keccak256(type(JALAPair).creationCode)
+                            keccak256(type(CAPOPair).creationCode)
                         )
                     )
                 )
@@ -52,7 +52,7 @@ library JALALibrary {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1, ) = IJALAPair(pairFor(factory, tokenA, tokenB)).getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = ICAPOPair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 

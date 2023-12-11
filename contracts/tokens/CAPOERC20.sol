@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-contract JALAERC20 {
-    string public constant name = "JALA LP";
-    string public constant symbol = "JALA-LP";
+contract CAPOERC20 {
+    string public constant name = "CAPO LP";
+    string public constant symbol = "CAPO-LP";
     uint8 public constant decimals = 18;
 
     uint256 public totalSupply;
